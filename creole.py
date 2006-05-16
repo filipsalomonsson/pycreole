@@ -48,10 +48,20 @@ if __name__ == '__main__':
         os.makedirs(store_dir)
         
     # Store the response
+    #@@: might not be the same URL as was requested; doublecheck?
     filename = os.path.join(store_dir, md5.md5(path).hexdigest())
     tmp_filename = filename + ".tmp"
     f = open(tmp_filename, 'w')
     f.write(response.read())
+    f.close()
+    os.rename(tmp_filename, filename)
+
+    # ..and headers...
+    filename = filename + ".headers"
+    tmp_filename = filename + "'.tmp"
+    f = open(tmp_filename, 'w')
+    for (key, value) in sorted(response.info().items()):
+        f.write("%s: %s\n" % (key, value))
     f.close()
     os.rename(tmp_filename, filename)
 
