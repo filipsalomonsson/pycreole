@@ -44,10 +44,14 @@ if __name__ == '__main__':
 
     # Parse robots.txt, if available
     rp = robotparser.RobotFileParser()
-    request = urllib2.Request("http://%s/robots.txt" % host,
-                              headers=headers)
-    response = urllib2.urlopen(request)
-    rp.parse(response.readlines())
+    try:
+        request = urllib2.Request("http://%s/robots.txt" % host,
+                                  headers=headers)
+        response = urllib2.urlopen(request)
+        rp.parse(response.readlines())
+    except urllib2.HTTPError:
+        # No robots.txt found; can_fetch() will always return True
+        pass
 
     # Fetch the requested URL, if allowed
     if not rp.can_fetch("%s/%s" % (USER_AGENT, __version__), url):
