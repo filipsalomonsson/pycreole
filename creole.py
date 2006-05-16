@@ -43,8 +43,10 @@ if __name__ == '__main__':
 
     # Parse robots.txt, if available
     rp = robotparser.RobotFileParser()
-    rp.set_url("http://%s/robots.txt" % host)
-    rp.read()
+    request = urllib2.Request("http://%s/robots.txt" % host,
+                              headers=headers)
+    response = urllib2.urlopen(request)
+    rp.parse(response.readlines())
 
     # Fetch the requested URL, if allowed
     if not rp.can_fetch("%s/%s" % (USER_AGENT, __version__), url):
