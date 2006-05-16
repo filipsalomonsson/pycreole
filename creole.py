@@ -15,6 +15,7 @@ if __name__ == '__main__':
     import re
     import os.path
     import md5
+    import robotparser
 
     # Set up and run the option parser
     usage = "usage: %prog [options] URL ..."
@@ -37,8 +38,17 @@ if __name__ == '__main__':
     # Host, without default port
     host = re.sub(r':80$', '', url_parts[1])
 
-    # Fetch the requested URL
+    # Default request headers
     headers = {'User-Agent': "%s/%s" % (USER_AGENT, __version__)}
+
+    # Parse robots.txt, if available
+    rp = robotparser.RobotFileParser()
+    rp.set_url("http://%s/robots.txt" % host)
+    rp.read()
+
+    # Fetch the requested URL, if allowed
+    if not rp.can_fetch("%s/%s" % (USER_AGENT, __version__), url):
+        raise Exception("Not allowed by robots.txt")
     request = urllib2.Request(url, headers=headers)
     response = urllib2.urlopen(request)
 
