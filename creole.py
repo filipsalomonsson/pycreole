@@ -3,6 +3,12 @@
 
 __author__ = "Filip Salomonsson <filip@infix.se>"
 
+import urllib2
 
 if __name__ == '__main__':
-    pass
+    import sys
+
+    url = sys.argv[1]
+    res = urllib2.urlopen(url)
+    data = res.read()
+    print data
