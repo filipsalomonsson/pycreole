@@ -35,15 +35,19 @@ if __name__ == '__main__':
     host = re.sub(r':80$', '', url_parts[1])
 
     # Fetch the requested URL
-    res = urllib2.urlopen(url)
-    data = res.read()
+    response = urllib2.urlopen(url)
 
     store_dir = os.path.join(options.dir, host)
     # Create store directory if it doesn't already exist.
     if not os.access(store_dir, os.F_OK):
         os.makedirs(store_dir)
         
-    print url
-    print path
-    print host
-    print os.path.join(store_dir, md5.md5(path).hexdigest())
+    # Store the response
+    filename = os.path.join(store_dir, md5.md5(path).hexdigest())
+    tmp_filename = filename + ".tmp"
+    f = open(tmp_filename, 'w')
+    f.write(response.read())
+    f.close()
+    os.rename(tmp_filename, filename)
+
+    print >> sys.stderr, "Successfully stored %s" % (url,)
