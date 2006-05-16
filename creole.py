@@ -2,8 +2,11 @@
 """Pycreole - a simple web crawler."""
 
 __author__ = "Filip Salomonsson <filip@infix.se>"
+__version__ = "0.1a"
 
 import urllib2
+
+USER_AGENT = "pycreole"
 
 if __name__ == '__main__':
     import sys
@@ -35,7 +38,9 @@ if __name__ == '__main__':
     host = re.sub(r':80$', '', url_parts[1])
 
     # Fetch the requested URL
-    response = urllib2.urlopen(url)
+    headers = {'User-Agent': "%s/%s" % (USER_AGENT, __version__)}
+    request = urllib2.Request(url, headers=headers)
+    response = urllib2.urlopen(request)
 
     store_dir = os.path.join(options.dir, host)
     # Create store directory if it doesn't already exist.
