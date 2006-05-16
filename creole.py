@@ -16,6 +16,7 @@ if __name__ == '__main__':
     import os.path
     import md5
     import robotparser
+    import bz2
 
     # Set up and run the option parser
     usage = "usage: %prog [options] URL ..."
@@ -63,10 +64,10 @@ if __name__ == '__main__':
     #@@: might not be the same URL as was requested; doublecheck?
     filename = os.path.join(store_dir, md5.md5(path).hexdigest())
     tmp_filename = filename + ".tmp"
-    f = open(tmp_filename, 'w')
-    f.write(response.read())
+    f = bz2.BZ2File(tmp_filename, 'w')
+    f.writelines(response.readlines())
     f.close()
-    os.rename(tmp_filename, filename)
+    os.rename(tmp_filename, filename + '.bzip2')
 
     # ..and headers...
     filename = filename + ".headers"
