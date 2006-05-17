@@ -52,7 +52,7 @@ if __name__ == '__main__':
     if not os.access(store_dir, os.F_OK):
         os.makedirs(store_dir)
         
-    path_hash = md5.md5(path).hexdigest()
+    path_hash = md5.new(path).hexdigest()
 
     # Fetch the requested URL, if allowed (and not already fetched)
     if not rp.can_fetch("%s/%s" % (USER_AGENT, __version__), url):
