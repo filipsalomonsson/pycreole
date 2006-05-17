@@ -53,7 +53,7 @@ class Crawler:
         if not rp.can_fetch(self.USER_AGENT, url):
             raise Exception("Not allowed by robots.txt")
 
-        elif os.access(os.path.join(store_dir, path_hash), os.F_OK):
+        elif os.access(os.path.join(store_dir, path_hash+".bzip2"), os.F_OK):
             raise Exception("Already stored.")
 
         request = urllib2.Request(url, headers=headers)
