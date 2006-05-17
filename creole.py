@@ -39,19 +39,13 @@ if __name__ == '__main__':
     # Host, without default port
     host = re.sub(r':80$', '', url_parts[1])
 
-    # Default request headers
-    headers = {'User-Agent': "%s/%s" % (USER_AGENT, __version__)}
+    # Customize the user-agent header
+    robotparser.URLopener.version =  "%s/%s" % (USER_AGENT, __version__)
 
-    # Parse robots.txt, if available
+    # Fetch and parse robots.txt, if available
     rp = robotparser.RobotFileParser()
-    try:
-        request = urllib2.Request("http://%s/robots.txt" % host,
-                                  headers=headers)
-        response = urllib2.urlopen(request)
-        rp.parse(response.readlines())
-    except urllib2.HTTPError:
-        # No robots.txt found; can_fetch() will always return True
-        pass
+    rp.set_url("http://%s/robots.txt")
+    rp.read()
 
     store_dir = os.path.join(options.dir, host)
     # Create store directory if it doesn't already exist.
