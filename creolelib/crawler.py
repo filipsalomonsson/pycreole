@@ -21,10 +21,21 @@ class Crawler:
         self.store = store
         self.throttle_delay = throttle_delay
 
-    def fetch(self, base_url):
-        """Start a crawl from the given base url."""
+    def crawl(base_url):
+        """Start a crawl from the given base URL."""
+        # Reset the queue
+        self.url_queue = [base_url]
+
+        while len(self.url_queue) > 0:
+            url = self.url_queue.pop()
+            self.fetch(url)
+            urls = self.extract_urls(url)
+            self.url_queue.extend(urls)
+
+    def fetch(self, url):
+        """Fetch a single URL."""
         # Clean up the URL (get rid of any fragment identifier)
-        url_parts = urlparse.urlsplit(base_url, 'http')
+        url_parts = urlparse.urlsplit(url, 'http')
         url = urlparse.urlunsplit(url_parts[:-1] + ('',))
 
         # Path, including parameters (unique identifier within a host)
@@ -78,3 +89,6 @@ class Crawler:
         os.rename(tmp_filename, filename)
 
         print >> sys.stderr, "Successfully stored %s" % (url,)
+
+    def extract_urls(self, url):
+        """Parses a stored document and returns URLS found in it."""
