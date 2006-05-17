@@ -21,7 +21,7 @@ class Crawler:
         self.store = store
         self.throttle_delay = throttle_delay
 
-    def crawl(self, base_url):
+    def fetch(self, base_url):
         """Start a crawl from the given base url."""
         # Clean up the URL (get rid of any fragment identifier)
         url_parts = urlparse.urlsplit(base_url, 'http')
