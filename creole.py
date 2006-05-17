@@ -53,20 +53,26 @@ if __name__ == '__main__':
         # No robots.txt found; can_fetch() will always return True
         pass
 
-    # Fetch the requested URL, if allowed
-    if not rp.can_fetch("%s/%s" % (USER_AGENT, __version__), url):
-        raise Exception("Not allowed by robots.txt")
-    request = urllib2.Request(url, headers=headers)
-    response = urllib2.urlopen(request)
-
     store_dir = os.path.join(options.dir, host)
     # Create store directory if it doesn't already exist.
     if not os.access(store_dir, os.F_OK):
         os.makedirs(store_dir)
         
+    path_hash = md5.md5(path).hexdigest()
+
+    # Fetch the requested URL, if allowed (and not already fetched)
+    if not rp.can_fetch("%s/%s" % (USER_AGENT, __version__), url):
+        raise Exception("Not allowed by robots.txt")
+
+    elif os.access(os.path.join(store_dir, path_hash), os.F_OK):
+        raise Exception("Already stored.")
+    
+    request = urllib2.Request(url, headers=headers)
+    response = urllib2.urlopen(request)
+
     # Store the response
     #@@: might not be the same URL as was requested; doublecheck?
-    filename = os.path.join(store_dir, md5.md5(path).hexdigest())
+    filename = os.path.join(store_dir, path_hash)
     tmp_filename = filename + ".tmp"
     f = bz2.BZ2File(tmp_filename, 'w')
     f.writelines(response.readlines())
