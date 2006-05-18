@@ -28,12 +28,12 @@ class Crawler:
 
         while len(self.url_queue) > 0:
             url = self.url_queue.pop()
-            self.fetch(url)
+            self.retrieve(url)
             urls = self.extract_urls(url)
             self.url_queue.extend(urls)
 
-    def fetch(self, url):
-        """Fetch a single URL."""
+    def retrieve(self, url):
+        """Retrieve a single URL."""
         # Clean up the URL (get rid of any fragment identifier)
         url_parts = urlparse.urlsplit(url, 'http')
         url = urlparse.urlunsplit(url_parts[:-1] + ('',))
