@@ -24,4 +24,4 @@ if __name__ == '__main__':
 
     # Create a crawler and send it off.
     crawler = Crawler(store=options.dir)
-    print crawler.retrieve(args[0])
+    print crawler.crawl(args[0])

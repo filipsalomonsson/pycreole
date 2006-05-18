@@ -25,16 +25,17 @@ class Crawler:
     def __init__(self, store=".store", throttle_delay=1):
         self.store = store
         self.throttle_delay = throttle_delay
+        self.history = set()
 
-    def crawl(base_url):
+    def crawl(self, base_url):
         """Start a crawl from the given base URL."""
         # Reset the queue
         self.url_queue = [base_url]
 
         while len(self.url_queue) > 0:
             url = self.url_queue.pop()
-            self.retrieve(url)
-            urls = self.extract_urls(url)
+            doc = self.retrieve(url)
+            urls = self.extract_urls(doc, url)
             self.url_queue.extend(urls)
 
     def retrieve(self, url):
@@ -72,19 +73,22 @@ class Crawler:
         # First, try in the store
         try:
             filename = os.path.join(store_dir, basename + ".bzip2")
+            self.history.add(url)
             return bz2.BZ2File(filename).read()
         except IOError:
             pass
 
         request = urllib2.Request(url, headers=headers)
         response = urllib2.urlopen(request)
+        self.history.add(response.geturl())
+        doc = response.read()
 
         # Store the response
         #@@: might not be the same URL as was requested; doublecheck?
         filename = os.path.join(store_dir, basename)
         tmp_filename = filename + ".tmp"
         f = bz2.BZ2File(tmp_filename, 'w')
-        f.writelines(response.readlines())
+        f.write(doc)
         f.close()
         os.rename(tmp_filename, filename + '.bzip2')
 
@@ -97,20 +101,21 @@ class Crawler:
         f.close()
         os.rename(tmp_filename, filename)
 
-        response.seek(0)
-        return response.read()
+        return doc
 
-    def extract_urls(self, doc, base_url=None):
+    def extract_urls(self, doc, base_url):
         """Parses a document and returns URLS found in it."""
         tree = TidyHTMLTreeBuilder.parse(StringIO(doc))
         root = tree.getroot()
+
+        base_url = urlnorm.norms(base_url)
 
         urls = []
         for elem in root.findall(".//%sa" % XHTML_NS):
             href = elem.get("href")
             url = urlnorm.norms(urlparse.urljoin(base_url, href))
-            print url
-            if not base_url or urlparse.urlsplit(url)[:2] \
-               == urlparse.urlsplit(urlnorm.norms(base_url))[:2]:
+            if urlparse.urlsplit(url)[:2] == urlparse.urlsplit(base_url)[:2] \
+                   and url not in self.history:
                 urls.append(url)
+                print url, self.history
         return urls
