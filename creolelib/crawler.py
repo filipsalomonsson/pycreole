@@ -64,8 +64,12 @@ class Crawler:
         if not rp.can_fetch(self.USER_AGENT, url):
             raise Exception("Not allowed by robots.txt")
 
-        elif os.access(os.path.join(store_dir, basename + ".bzip2"), os.F_OK):
-            raise Exception("Already stored.")
+        # First, try in the store
+        try:
+            filename = os.path.join(store_dir, basename + ".bzip2")
+            return bz2.BZ2File(filename).read()
+        except IOError:
+            pass
 
         request = urllib2.Request(url, headers=headers)
         response = urllib2.urlopen(request)
@@ -88,7 +92,8 @@ class Crawler:
         f.close()
         os.rename(tmp_filename, filename)
 
-        print >> sys.stderr, "Successfully stored %s" % (url,)
+        response.seek(0)
+        return response.read()
 
     def extract_urls(self, url):
         """Parses a stored document and returns URLS found in it."""
