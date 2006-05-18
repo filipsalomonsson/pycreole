@@ -8,9 +8,14 @@ from base64 import urlsafe_b64encode, urlsafe_b64decode
 import robotparser
 import bz2
 import urllib2
+from cStringIO import StringIO
+from elementtidy import TidyHTMLTreeBuilder
+import urlnorm
 
 __author__ = "Filip Salomonsson"
 __version__ = "0.1a"
+
+XHTML_NS = "{http://www.w3.org/1999/xhtml}"
 
 class Crawler:
     """Web crawler."""
@@ -95,5 +100,17 @@ class Crawler:
         response.seek(0)
         return response.read()
 
-    def extract_urls(self, url):
-        """Parses a stored document and returns URLS found in it."""
+    def extract_urls(self, doc, base_url=None):
+        """Parses a document and returns URLS found in it."""
+        tree = TidyHTMLTreeBuilder.parse(StringIO(doc))
+        root = tree.getroot()
+
+        urls = []
+        for elem in root.findall(".//%sa" % XHTML_NS):
+            href = elem.get("href")
+            url = urlnorm.norms(urlparse.urljoin(base_url, href))
+            print url
+            if not base_url or urlparse.urlsplit(url)[:2] \
+               == urlparse.urlsplit(urlnorm.norms(base_url))[:2]:
+                urls.append(url)
+        return urls
