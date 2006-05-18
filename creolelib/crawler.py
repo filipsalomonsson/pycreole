@@ -110,12 +110,11 @@ class Crawler:
 
         base_url = urlnorm.norms(base_url)
 
-        urls = []
+        urls = set()
         for elem in root.findall(".//%sa" % XHTML_NS):
             href = elem.get("href")
             url = urlnorm.norms(urlparse.urljoin(base_url, href))
             if urlparse.urlsplit(url)[:2] == urlparse.urlsplit(base_url)[:2] \
                    and url not in self.history:
-                urls.append(url)
-                print url, self.history
+                urls.add(url)
         return urls
