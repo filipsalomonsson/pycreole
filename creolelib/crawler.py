@@ -4,7 +4,7 @@ import sys
 import urlparse
 import re
 import os.path
-import md5
+from base64 import urlsafe_b64encode, urlsafe_b64decode
 import robotparser
 import bz2
 import urllib2
@@ -58,13 +58,13 @@ class Crawler:
         if not os.access(store_dir, os.F_OK):
             os.makedirs(store_dir)
 
-        path_hash = md5.new(path).hexdigest()
+        basename = urlsafe_b64encode(path)
 
         # Fetch the requested URL, if allowed (and not already fetched)
         if not rp.can_fetch(self.USER_AGENT, url):
             raise Exception("Not allowed by robots.txt")
 
-        elif os.access(os.path.join(store_dir, path_hash+".bzip2"), os.F_OK):
+        elif os.access(os.path.join(store_dir, basename + ".bzip2"), os.F_OK):
             raise Exception("Already stored.")
 
         request = urllib2.Request(url, headers=headers)
@@ -72,7 +72,7 @@ class Crawler:
 
         # Store the response
         #@@: might not be the same URL as was requested; doublecheck?
-        filename = os.path.join(store_dir, path_hash)
+        filename = os.path.join(store_dir, basename)
         tmp_filename = filename + ".tmp"
         f = bz2.BZ2File(tmp_filename, 'w')
         f.writelines(response.readlines())
