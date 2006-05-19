@@ -1,16 +1,16 @@
 # The Creole Crawler
 
 import sys
-import urlparse
 import re
 import os.path
-from base64 import urlsafe_b64encode, urlsafe_b64decode
 import robotparser
 import bz2
+import urlparse
 import urllib2
+import urlnorm
 from cStringIO import StringIO
 from elementtidy import TidyHTMLTreeBuilder
-import urlnorm
+from base64 import urlsafe_b64encode, urlsafe_b64decode
 
 __author__ = "Filip Salomonsson"
 __version__ = "0.1a"
