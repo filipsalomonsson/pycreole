@@ -146,6 +146,7 @@ class Crawler:
             href = elem.get("href")
             url = urlnorm.norms(urljoin(base_url, href))
             if urlsplit(url)[:2] == urlsplit(base_url)[:2] \
-                   and url not in self.history:
+                   and url not in self.history \
+                   and url not in self.url_queue:
                 urls.add(url)
         return urls
