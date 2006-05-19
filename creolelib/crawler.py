@@ -3,6 +3,7 @@
 import sys
 import re
 import os.path
+import time
 import robotparser
 import bz2
 import urllib2
@@ -28,6 +29,7 @@ class Crawler:
         self.throttle_delay = throttle_delay
         self.history = set()
         self.robotcache = {}
+        self.lastvisit = {}
 
     def crawl(self, base_url):
         """Start a crawl from the given base URL."""
@@ -52,14 +54,12 @@ class Crawler:
         # Host, without default port
         host = re.sub(r':80$', '', url_parts[1])
 
-
         store_dir = os.path.join(self.store, host)
         # Create store directory if it doesn't already exist.
         if not os.access(store_dir, os.F_OK):
             os.makedirs(store_dir)
 
         basename = urlsafe_b64encode(path)
-
 
         try:
             # Use cached robots.txt...
@@ -86,8 +86,15 @@ class Crawler:
         # Customize the user-agent header
         headers = {"User-Agent": self.USER_AGENT}
 
+        # Set up the request
         request = urllib2.Request(url, headers=headers)
+
+        # Honor the throttling delay
+        delta = time.time() - self.lastvisit.get(host, 0)
+        if delta < self.throttle_delay:
+            time.sleep(self.throttle_delay - delta)
         response = urllib2.urlopen(request)
+        self.lastvisit[host] = time.time()
         self.history.add(response.geturl())
         doc = response.read()
 
