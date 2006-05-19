@@ -21,11 +21,13 @@ class Crawler:
     """Web crawler."""
 
     USER_AGENT = "Creole/%s" % __version__
-
+    robotparser.URLopener.version =  USER_AGENT
+    
     def __init__(self, store=".store", throttle_delay=1):
         self.store = store
         self.throttle_delay = throttle_delay
         self.history = set()
+        self.robotcache = {}
 
     def crawl(self, base_url):
         """Start a crawl from the given base URL."""
@@ -50,14 +52,6 @@ class Crawler:
         # Host, without default port
         host = re.sub(r':80$', '', url_parts[1])
 
-        # Customize the user-agent header
-        robotparser.URLopener.version =  self.USER_AGENT
-        headers = {"User-Agent": self.USER_AGENT}
-
-        # Fetch and parse robots.txt, if available
-        rp = robotparser.RobotFileParser()
-        rp.set_url("http://%s/robots.txt" % host)
-        rp.read()
 
         store_dir = os.path.join(self.store, host)
         # Create store directory if it doesn't already exist.
@@ -65,6 +59,17 @@ class Crawler:
             os.makedirs(store_dir)
 
         basename = urlsafe_b64encode(path)
+
+
+        try:
+            # Use cached robots.txt...
+            rp = self.robotcache[host]
+        except KeyError:
+            # ...fetch and parse it if it wasn't in the cache
+            rp = robotparser.RobotFileParser()
+            rp.set_url(urljoin(url, "/robots.txt"))
+            rp.read()
+            self.robotcache[host] = rp
 
         # Fetch the requested URL, if allowed (and not already fetched)
         if not rp.can_fetch(self.USER_AGENT, url):
@@ -77,6 +82,9 @@ class Crawler:
             return bz2.BZ2File(filename).read()
         except IOError:
             pass
+
+        # Customize the user-agent header
+        headers = {"User-Agent": self.USER_AGENT}
 
         request = urllib2.Request(url, headers=headers)
         response = urllib2.urlopen(request)
