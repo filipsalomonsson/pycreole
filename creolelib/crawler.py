@@ -5,12 +5,12 @@ import re
 import os.path
 import robotparser
 import bz2
-import urlparse
 import urllib2
 import urlnorm
 from cStringIO import StringIO
 from elementtidy import TidyHTMLTreeBuilder
 from base64 import urlsafe_b64encode, urlsafe_b64decode
+from urlparse import urlsplit, urlunsplit, urljoin
 
 __author__ = "Filip Salomonsson"
 __version__ = "0.1a"
@@ -41,11 +41,11 @@ class Crawler:
     def retrieve(self, url):
         """Retrieve a single URL."""
         # Clean up the URL (get rid of any fragment identifier)
-        url_parts = urlparse.urlsplit(url, 'http')
-        url = urlparse.urlunsplit(url_parts[:-1] + ('',))
+        url_parts = urlsplit(url, 'http')
+        url = urlunsplit(url_parts[:-1] + ('',))
 
         # Path, including parameters (unique identifier within a host)
-        path = urlparse.urlunsplit(('', '') + url_parts[2:-1] + ('',))
+        path = urlunsplit(('', '') + url_parts[2:-1] + ('',))
 
         # Host, without default port
         host = re.sub(r':80$', '', url_parts[1])
@@ -113,8 +113,8 @@ class Crawler:
         urls = set()
         for elem in root.findall(".//%sa" % XHTML_NS):
             href = elem.get("href")
-            url = urlnorm.norms(urlparse.urljoin(base_url, href))
-            if urlparse.urlsplit(url)[:2] == urlparse.urlsplit(base_url)[:2] \
+            url = urlnorm.norms(urljoin(base_url, href))
+            if urlsplit(url)[:2] == urlsplit(base_url)[:2] \
                    and url not in self.history:
                 urls.add(url)
         return urls
