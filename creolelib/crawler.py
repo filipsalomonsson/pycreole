@@ -27,6 +27,11 @@ class DebugWriter:
         self.file.write(msg)
 debug = DebugWriter()
     
+def clean_url(url):
+    (proto, host, path, params, frag) = urlsplit(urlnorm.norms(url))
+    return urlunsplit((proto, host, path, params, ''))
+    
+
 class Crawler:
     """Web crawler."""
 
@@ -56,15 +61,10 @@ class Crawler:
         """Retrieve a single URL."""
         print >> debug, "Fetching %s" % url
         
-        # Clean up the URL (get rid of any fragment identifier)
-        url_parts = urlsplit(url, 'http')
-        url = urlunsplit(url_parts[:-1] + ('',))
-
-        # Path, including parameters (unique identifier within a host)
-        path = urlunsplit(('', '') + url_parts[2:-1] + ('',))
-
-        # Host, without default port
-        host = re.sub(r':80$', '', url_parts[1])
+        # Clean up the URL (normalize it and get rid of any
+        # fragment identifier)        
+        url = clean_url(url)
+        (proto, host, path, params, _) = urlsplit(url)
 
         store_dir = os.path.join(self.store, host)
         # Create store directory if it doesn't already exist.
@@ -139,12 +139,12 @@ class Crawler:
         tree = TidyHTMLTreeBuilder.parse(StringIO(doc))
         root = tree.getroot()
 
-        base_url = urlnorm.norms(base_url)
+        base_url = clean_url(base_url)
 
         urls = set()
         for elem in root.findall(".//%sa" % XHTML_NS):
             href = elem.get("href")
-            url = urlnorm.norms(urljoin(base_url, href))
+            url = clean_url((urljoin(base_url, href)))
             if urlsplit(url)[:2] == urlsplit(base_url)[:2] \
                    and url not in self.history \
                    and url not in self.url_queue:
