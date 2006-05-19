@@ -18,6 +18,15 @@ __version__ = "0.1a"
 
 XHTML_NS = "{http://www.w3.org/1999/xhtml}"
 
+class DebugWriter:
+    def __init__(self):
+        self.file = sys.stderr
+    def write(self, msg):
+        self.file.write(msg)
+    def __call__(self, msg):
+        self.file.write(msg)
+debug = DebugWriter()
+    
 class Crawler:
     """Web crawler."""
 
@@ -41,9 +50,12 @@ class Crawler:
             doc = self.retrieve(url)
             urls = self.extract_urls(doc, url)
             self.url_queue.extend(urls)
+            print >> debug, "Added %s urls to queue." % len(urls)
 
     def retrieve(self, url):
         """Retrieve a single URL."""
+        print >> debug, "Fetching %s" % url
+        
         # Clean up the URL (get rid of any fragment identifier)
         url_parts = urlsplit(url, 'http')
         url = urlunsplit(url_parts[:-1] + ('',))
@@ -68,6 +80,7 @@ class Crawler:
             # ...fetch and parse it if it wasn't in the cache
             rp = robotparser.RobotFileParser()
             rp.set_url(urljoin(url, "/robots.txt"))
+            print >> debug, "Fetching /robots.txt first."
             rp.read()
             self.robotcache[host] = rp
 
@@ -92,6 +105,8 @@ class Crawler:
         # Honor the throttling delay
         delta = time.time() - self.lastvisit.get(host, 0)
         if delta < self.throttle_delay:
+            print >> debug, "Going too fast; sleeping for %.1f seconds..." \
+                  % (self.throttle_delay - delta) 
             time.sleep(self.throttle_delay - delta)
         response = urllib2.urlopen(request)
         self.lastvisit[host] = time.time()
