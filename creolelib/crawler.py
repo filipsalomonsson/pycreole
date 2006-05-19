@@ -89,10 +89,11 @@ class Crawler:
             raise Exception("Not allowed by robots.txt")
 
         # First, try in the store
+        filename = os.path.join(store_dir, basename + ".bzip2")
         try:
-            filename = os.path.join(store_dir, basename + ".bzip2")
+            stored = bz2.BZ2File(filename).read()
             self.history.add(url)
-            return bz2.BZ2File(filename).read()
+            return stored
         except IOError:
             pass
 
