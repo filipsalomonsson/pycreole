@@ -14,8 +14,10 @@ if __name__ == '__main__':
     # Set up and run the option parser
     usage = "usage: %prog [options] URL ..."
     op = OptionParser(usage)
-    op.add_option("-d", "--dir", dest="dir", default=".",
+    op.add_option("-s", "--store", dest="store", default=".",
                   help="storage directory")
+    op.add_option("-d", "--delay", dest="delay", default="1",
+                  type="int", help="throttle delay")
     (options, args) = op.parse_args()
 
     # We need at least one URL
@@ -23,5 +25,6 @@ if __name__ == '__main__':
         op.error("no URL given")
 
     # Create a crawler and send it off.
-    crawler = Crawler(store=options.dir)
+    crawler = Crawler(store=options.store,
+                      throttle_delay=options.delay)
     crawler.crawl(args[0])
