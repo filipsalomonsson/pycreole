@@ -66,6 +66,9 @@ class Crawler:
         (proto, host, path, params, _) = urlsplit(url)
         print >> debug, "Retrieving %s" % url
 
+        # We use the path including parameters as an identifier
+        path = urlunsplit(('', '', path, params, ''))
+
         store_dir = os.path.join(self.store, host)
         # Create store directory if it doesn't already exist.
         if not os.access(store_dir, os.F_OK):
