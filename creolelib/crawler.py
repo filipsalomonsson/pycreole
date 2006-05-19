@@ -55,16 +55,16 @@ class Crawler:
             doc = self.retrieve(url)
             urls = self.extract_urls(doc, url)
             self.url_queue.extend(urls)
-            print >> debug, "Added %s urls to queue." % len(urls)
+            print >> debug, "Added %s new urls to queue." % len(urls)
 
     def retrieve(self, url):
         """Retrieve a single URL."""
-        print >> debug, "Fetching %s" % url
         
         # Clean up the URL (normalize it and get rid of any
         # fragment identifier)        
         url = clean_url(url)
         (proto, host, path, params, _) = urlsplit(url)
+        print >> debug, "Retrieving %s" % url
 
         store_dir = os.path.join(self.store, host)
         # Create store directory if it doesn't already exist.
@@ -92,6 +92,7 @@ class Crawler:
         filename = os.path.join(store_dir, basename + ".bzip2")
         try:
             stored = bz2.BZ2File(filename).read()
+            print >> debug, "..Already in store!"
             self.history.add(url)
             return stored
         except IOError:
@@ -131,6 +132,8 @@ class Crawler:
             f.write("%s: %s\n" % (key, value))
         f.close()
         os.rename(tmp_filename, filename)
+
+        print >> debug, "..Successfully stored!"
 
         return doc
 
