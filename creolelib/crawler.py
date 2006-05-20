@@ -30,7 +30,10 @@ debug = DebugWriter()
 def clean_url(url):
     (proto, host, path, params, frag) = urlsplit(urlnorm.norms(url))
     return urlunsplit((proto, host, path, params, ''))
-    
+
+class CrawlerException(Exception): pass
+class WrongContentTypeException(CrawlerException): pass
+class RobotsNotAllowedException(CrawlerException): pass
 
 class Crawler:
     """Web crawler."""
@@ -52,11 +55,13 @@ class Crawler:
 
         while len(self.url_queue) > 0:
             url = self.url_queue.pop()
-            doc = self.retrieve(url)
-            urls = self.extract_urls(doc, url)
-            self.url_queue.extend(urls)
-            print >> debug, "Added %s new urls to queue." % len(urls)
-
+            try:
+                doc = self.retrieve(url)
+                urls = self.extract_urls(doc, url)
+                self.url_queue.extend(urls)
+                print >> debug, "Added %s new urls to queue." % len(urls)
+            except (RobotsNotAllowedException, WrongContentTypeException):
+                pass
     def retrieve(self, url):
         """Retrieve a single URL."""
         
@@ -89,7 +94,7 @@ class Crawler:
 
         # Fetch the requested URL, if allowed (and not already fetched)
         if not rp.can_fetch(self.USER_AGENT, url):
-            raise Exception("Not allowed by robots.txt")
+            raise RobotsNotAllowedException
 
         # First, try in the store
         filename = os.path.join(store_dir, basename + ".bzip2")
@@ -116,6 +121,12 @@ class Crawler:
         response = urllib2.urlopen(request)
         self.lastvisit[host] = time.time()
         self.history.add(response.geturl())
+
+        info = response.info()
+        content_type = info.get("content-type", "text/plain").split()[0]
+        if not content_type.startswith("text/"):
+            raise WrongContentTypeException("Won't fetch %s." % content_type)
+
         doc = response.read()
 
         # Store the response
