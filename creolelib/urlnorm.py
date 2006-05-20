@@ -52,7 +52,7 @@ from string import lower
 import re
 
 _collapse = re.compile('([^/]+/\.\./?|/\./|//|/\.$|/\.\.$)')
-_server_authority = re.compile('^(?:([^\@]+)\@)?([^\:]+)(?:\:(.+))?$')
+_server_authority = re.compile('^(?:([^\@]+)\@)?(.+)(?:\:(.+))?$')
 _default_port = {   'http': '80',
                     'https': '443',
                     'gopher': '70',
