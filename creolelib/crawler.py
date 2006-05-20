@@ -59,9 +59,15 @@ class Crawler:
                 doc = self.retrieve(url)
                 urls = self.extract_urls(doc, url)
                 self.url_queue.extend(urls)
-                print >> debug, "Added %s new urls to queue." % len(urls)
-            except (RobotsNotAllowedException, WrongContentTypeException):
-                pass
+                if len(urls) > 0:
+                    print >> debug, "..Added %s new urls to queue." % len(urls)
+            except RobotsNotAllowedException:
+                print >> debug, "..I'm not allowed there."
+            except WrongContentTypeException:
+                print >> debug, "..Wrong content-type."
+            except urllib2.HTTPError, e:
+                print >> debug, "..HTTP Error %s" % e.code
+
     def retrieve(self, url):
         """Retrieve a single URL."""
         
