@@ -124,8 +124,10 @@ class Crawler:
             print >> debug, "Going too fast; sleeping for %.1f seconds..." \
                   % (self.throttle_delay - delta) 
             time.sleep(self.throttle_delay - delta)
-        response = urllib2.urlopen(request)
+
+        # Set lastvisit now, since urlopen might raise an exception
         self.lastvisit[host] = time.time()
+        response = urllib2.urlopen(request)
         self.history.add(response.geturl())
 
         info = response.info()
