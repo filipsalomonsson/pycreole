@@ -140,8 +140,12 @@ class Crawler:
 
         doc = response.read()
 
+        # It's the final path that's interesting now..
+        (proto, host, path, params, _) = urlsplit(clean_url(response.geturl()))
+        path = urlunsplit(('', '', path, params, ''))
+        basename = urlsafe_b64encode(path)
+
         # Store the response
-        #@@: might not be the same URL as was requested; doublecheck?
         filename = os.path.join(store_dir, basename)
         tmp_filename = filename + ".tmp"
         f = bz2.BZ2File(tmp_filename, 'w')
