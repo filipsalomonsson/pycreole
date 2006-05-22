@@ -8,10 +8,12 @@ import robotparser
 import bz2
 import urllib2
 import urlnorm
+import mimetools
 from cStringIO import StringIO
 from elementtidy import TidyHTMLTreeBuilder
 from base64 import urlsafe_b64encode, urlsafe_b64decode
 from urlparse import urlsplit, urlunsplit, urljoin
+from urllib import addinfourl
 
 __author__ = "Filip Salomonsson"
 __version__ = "0.1a"
@@ -57,7 +59,7 @@ class Crawler:
             url = self.url_queue.pop()
             try:
                 doc = self.retrieve(url)
-                urls = self.extract_urls(doc, url)
+                urls = self.extract_urls(doc, doc.geturl())
                 self.url_queue.extend(urls)
                 if len(urls) > 0:
                     print >> debug, "..Added %s new urls to queue." % len(urls)
@@ -105,10 +107,12 @@ class Crawler:
         # First, try in the store
         filename = os.path.join(store_dir, basename + ".bzip2")
         try:
-            stored = bz2.BZ2File(filename).read()
+            stored = bz2.BZ2File(filename)
             print >> debug, "..Already in store!"
             self.history.add(url)
-            return stored
+            headers = mimetools.Message(
+                open(os.path.join(store_dir, basename + ".headers")))
+            return addinfourl(stored, headers, url)
         except IOError:
             pass
 
@@ -138,7 +142,7 @@ class Crawler:
         if not content_type.startswith("text/"):
             raise WrongContentTypeException("Won't fetch %s." % content_type)
 
-        doc = response.read()
+        doc = StringIO(response.read())
 
         # It's the final path that's interesting now..
         (proto, host, path, params, _) = urlsplit(clean_url(response.geturl()))
@@ -149,7 +153,7 @@ class Crawler:
         filename = os.path.join(store_dir, basename)
         tmp_filename = filename + ".tmp"
         f = bz2.BZ2File(tmp_filename, 'w')
-        f.write(doc)
+        f.write(doc.read())
         f.close()
         os.rename(tmp_filename, filename + '.bzip2')
 
@@ -164,11 +168,12 @@ class Crawler:
 
         print >> debug, "..Successfully stored!"
 
-        return doc
+        doc.seek(0)
+        return addinfourl(doc, response.info(), response.geturl())
 
     def extract_urls(self, doc, base_url):
         """Parses a document and returns URLS found in it."""
-        tree = TidyHTMLTreeBuilder.parse(StringIO(doc))
+        tree = TidyHTMLTreeBuilder.parse(doc)
         root = tree.getroot()
 
         base_url = clean_url(base_url)
