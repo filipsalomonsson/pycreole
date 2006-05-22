@@ -185,7 +185,11 @@ class Crawler:
 
     def extract_urls(self, doc, base_url):
         """Parses a document and returns URLS found in it."""
-        tree = TidyHTMLTreeBuilder.parse(doc)
+        try:
+            tree = TidyHTMLTreeBuilder.parse(doc)
+        except Exception, e:
+            print >> debug, "..Error while parsing: %r" % e
+            return set()
         root = tree.getroot()
 
         base_url = clean_url(base_url)
