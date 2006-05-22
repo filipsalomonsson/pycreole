@@ -128,7 +128,10 @@ class Crawler:
         # Set lastvisit now, since urlopen might raise an exception
         self.lastvisit[host] = time.time()
         response = urllib2.urlopen(request)
-        self.history.add(response.geturl())
+
+        # Add both original and final url to history
+        self.history.add(url)
+        self.history.add(clean_url(response.geturl()))
 
         info = response.info()
         content_type = info.get("content-type", "text/plain").split()[0]
