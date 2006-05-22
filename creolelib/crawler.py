@@ -36,6 +36,7 @@ def clean_url(url):
 class CrawlerException(Exception): pass
 class WrongContentTypeException(CrawlerException): pass
 class RobotsNotAllowedException(CrawlerException): pass
+class WrongDomainException(CrawlerException): pass
 
 class Crawler:
     """Web crawler."""
@@ -67,6 +68,8 @@ class Crawler:
                 print >> debug, "..I'm not allowed there."
             except WrongContentTypeException:
                 print >> debug, "..Wrong content-type."
+            except WrongDomainException:
+                print >> debug, "..Wrong domain."
             except urllib2.HTTPError, e:
                 print >> debug, "..HTTP Error %s" % e.code
 
@@ -133,9 +136,18 @@ class Crawler:
         self.lastvisit[host] = time.time()
         response = urllib2.urlopen(request)
 
-        # Add both original and final url to history
+        # Add original final url to history
         self.history.add(url)
-        self.history.add(clean_url(response.geturl()))
+
+        final_url = clean_url(response.geturl())
+
+        # Check if the final URL is still within the same domain.
+        # Barf if not.
+        if not urlsplit(url)[:2] == urlsplit(final_url)[:2]:
+            raise WrongDomainException
+        
+        # Add final URL to history
+        self.history.add(final_url)
 
         info = response.info()
         content_type = info.get("content-type", "text/plain").split()[0]
@@ -145,7 +157,7 @@ class Crawler:
         doc = StringIO(response.read())
 
         # It's the final path that's interesting now..
-        (proto, host, path, params, _) = urlsplit(clean_url(response.geturl()))
+        (proto, host, path, params, _) = urlsplit(final_url)
         path = urlunsplit(('', '', path, params, ''))
         basename = urlsafe_b64encode(path)
 
@@ -169,7 +181,7 @@ class Crawler:
         print >> debug, "..Successfully stored!"
 
         doc.seek(0)
-        return addinfourl(doc, response.info(), response.geturl())
+        return addinfourl(doc, response.info(), final_url)
 
     def extract_urls(self, doc, base_url):
         """Parses a document and returns URLS found in it."""
