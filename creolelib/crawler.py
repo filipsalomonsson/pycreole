@@ -196,10 +196,12 @@ class Crawler:
 
         urls = set()
         for elem in root.findall(".//%sa" % XHTML_NS):
-            href = elem.get("href").strip()
-            url = clean_url((urljoin(base_url, href)))
-            if urlsplit(url)[:2] == urlsplit(base_url)[:2] \
-                   and url not in self.history \
-                   and url not in self.url_queue:
-                urls.add(url)
+            href = elem.get("href")
+            if href is not None:
+                href = href.strip()
+                url = clean_url((urljoin(base_url, href)))
+                if urlsplit(url)[:2] == urlsplit(base_url)[:2] \
+                       and url not in self.history \
+                       and url not in self.url_queue:
+                    urls.add(url)
         return urls
