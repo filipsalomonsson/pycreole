@@ -90,7 +90,7 @@ class Crawler:
         if not os.access(store_dir, os.F_OK):
             os.makedirs(store_dir)
 
-        basename = urlsafe_b64encode(path)
+        basename = urlsafe_b64encode(path)[:240]
 
         try:
             # Use cached robots.txt...
@@ -159,7 +159,7 @@ class Crawler:
         # It's the final path that's interesting now..
         (proto, host, path, params, _) = urlsplit(final_url)
         path = urlunsplit(('', '', path, params, ''))
-        basename = urlsafe_b64encode(path)
+        basename = urlsafe_b64encode(path)[:240]
 
         # Store the response
         filename = os.path.join(store_dir, basename)
