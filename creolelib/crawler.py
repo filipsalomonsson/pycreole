@@ -196,7 +196,7 @@ class Crawler:
 
         urls = set()
         for elem in root.findall(".//%sa" % XHTML_NS):
-            href = elem.get("href")
+            href = elem.get("href").strip()
             url = clean_url((urljoin(base_url, href)))
             if urlsplit(url)[:2] == urlsplit(base_url)[:2] \
                    and url not in self.history \
